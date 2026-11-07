@@ -428,23 +428,82 @@ static NSString *BrowserPressPhaseString(UIPressPhase phase) {
             self.lastTouchLocation = location;
         }
 
-        self.cursorView.image = BrowserDefaultCursor();
-        if ([self.host browserRemoteInputControllerTabOverviewVisible]) {
-            if ([self.host browserRemoteInputControllerTabOverviewContainsPoint:self.cursorView.frame.origin]) {
-                self.cursorView.image = BrowserPointerCursor();
-            }
-            break;
-        }
-        if (self.cursorModeEnabled) {
-            NSString *containsLink = [self.host browserRemoteInputControllerHoverStateAtCursorPoint:self.cursorView.frame.origin];
-            if ([containsLink isEqualToString:@"true"]) {
-                self.cursorView.image = BrowserPointerCursor();
-            }
-        }
+        [self updateCursorHoverImage];
         break;
     }
 
     return YES;
+}
+
+- (void)updateCursorHoverImage {
+    self.cursorView.image = BrowserDefaultCursor();
+    if ([self.host browserRemoteInputControllerTabOverviewVisible]) {
+        if ([self.host browserRemoteInputControllerTabOverviewContainsPoint:self.cursorView.frame.origin]) {
+            self.cursorView.image = BrowserPointerCursor();
+        }
+        return;
+    }
+    if (self.cursorModeEnabled) {
+        NSString *containsLink = [self.host browserRemoteInputControllerHoverStateAtCursorPoint:self.cursorView.frame.origin];
+        if ([containsLink isEqualToString:@"true"]) {
+            self.cursorView.image = BrowserPointerCursor();
+        }
+    }
+}
+
+#pragma mark - External pointer input
+
+- (BOOL)externalInputBlocked {
+    return [self.host browserRemoteInputControllerPresentedViewController] != nil ||
+        [self.host browserRemoteInputControllerTopBarFocusActive];
+}
+
+- (void)moveCursorByDelta:(CGPoint)delta {
+    if ([self externalInputBlocked] || !self.cursorModeEnabled) {
+        return;
+    }
+    BOOL overviewVisible = [self.host browserRemoteInputControllerTabOverviewVisible];
+    CGRect bounds = self.rootView.bounds;
+    CGFloat maxX = CGRectGetWidth(bounds) > 0 ? CGRectGetWidth(bounds) : 1920;
+    CGFloat maxY = CGRectGetHeight(bounds) > 0 ? CGRectGetHeight(bounds) : 1080;
+
+    CGRect rect = self.cursorView.frame;
+    rect.origin.x = MIN(MAX(rect.origin.x + delta.x, 0.0), maxX);
+    rect.origin.y = MIN(MAX(rect.origin.y + delta.y, 0.0), maxY);
+    if (CGRectEqualToRect(rect, self.cursorView.frame)) {
+        return;
+    }
+    self.cursorView.frame = rect;
+
+    // Hover detection runs JavaScript, so throttle it to ~12 Hz for high-rate pointer input.
+    static CFTimeInterval lastHoverCheck = 0;
+    CFTimeInterval now = CACurrentMediaTime();
+    if (overviewVisible || (now - lastHoverCheck) > 0.08) {
+        lastHoverCheck = now;
+        [self updateCursorHoverImage];
+    }
+}
+
+- (void)scrollByDelta:(CGPoint)delta {
+    if ([self externalInputBlocked] || [self.host browserRemoteInputControllerTabOverviewVisible]) {
+        return;
+    }
+    [self stopManualScrollInertia];
+    [self applyManualScrollDelta:delta];
+}
+
+- (void)performExternalPrimaryAction {
+    if ([self externalInputBlocked]) {
+        return;
+    }
+    if ([self.host browserRemoteInputControllerTabOverviewVisible]) {
+        [self.host browserRemoteInputControllerHandleTabOverviewSelectionAtPoint:self.cursorView.frame.origin];
+        return;
+    }
+    if (!self.cursorModeEnabled) {
+        return;
+    }
+    [self.host browserRemoteInputControllerHandlePrimaryAction];
 }
 
 - (void)handleTouchesEnded {

@@ -47,6 +47,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setCursorModeEnabled:(BOOL)cursorModeEnabled;
 - (void)refreshInteractionState;
 
+// External pointer input (gyro / network pointer). Ignored while a menu, the top bar
+// or the tab overview owns input, or (for cursor movement) when not in cursor mode.
+- (void)moveCursorByDelta:(CGPoint)delta;
+- (void)scrollByDelta:(CGPoint)delta;
+- (void)performExternalPrimaryAction;
+
 @end
 
 NS_ASSUME_NONNULL_END

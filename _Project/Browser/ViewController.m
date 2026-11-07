@@ -7,6 +7,7 @@
 //
 
 #import "BrowserMenuCoordinator.h"
+#import "BrowserMotionInputController.h"
 #import "BrowserDOMInteractionService.h"
 #import "BrowserNavigationService.h"
 #import "BrowserPageActionCoordinator.h"
@@ -30,7 +31,7 @@ static UIColor *kTextColor(void) {
     }
 }
 
-@interface ViewController () <BrowserMenuCoordinatorHost, BrowserPageActionCoordinatorHost, BrowserRemoteInputControllerHost, BrowserTabCoordinatorHost, BrowserTabOverviewControllerHost, BrowserTopBarViewDelegate, BrowserVideoPlaybackCoordinatorHost>
+@interface ViewController () <BrowserMenuCoordinatorHost, BrowserPageActionCoordinatorHost, BrowserRemoteInputControllerHost, BrowserTabCoordinatorHost, BrowserTabOverviewControllerHost, BrowserTopBarViewDelegate, BrowserVideoPlaybackCoordinatorHost, BrowserMotionInputControllerDelegate>
 
 @property (nonatomic) BrowserDOMInteractionService *domInteractionService;
 @property (nonatomic) BrowserMenuCoordinator *menuCoordinator;
@@ -99,6 +100,10 @@ static UIColor *kTextColor(void) {
     self.topMenuView.delegate = self;
     self.topMenuView.loadingSpinner.hidesWhenStopped = YES;
     self.remoteInputController.cursorView.hidden = NO;
+
+    BrowserMotionInputController *motionInputController = [BrowserMotionInputController sharedController];
+    motionInputController.delegate = self;
+    [motionInputController startWithRootView:self.view];
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(handleApplicationWillResignActive:)
@@ -842,6 +847,20 @@ static UIColor *kTextColor(void) {
     (void)event;
     [self.remoteInputController handleTouchesEnded];
     [super touchesCancelled:touches withEvent:event];
+}
+
+#pragma mark - BrowserMotionInputControllerDelegate
+
+- (void)motionInputControllerMoveCursorByDelta:(CGPoint)delta {
+    [self.remoteInputController moveCursorByDelta:delta];
+}
+
+- (void)motionInputControllerScrollByDelta:(CGPoint)delta {
+    [self.remoteInputController scrollByDelta:delta];
+}
+
+- (void)motionInputControllerPerformPrimaryAction {
+    [self.remoteInputController performExternalPrimaryAction];
 }
 
 @end

@@ -26,6 +26,12 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_tvbpointer._udp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Receives pointer movement from your iPhone on the local network.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

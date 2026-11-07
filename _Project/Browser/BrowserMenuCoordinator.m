@@ -2,6 +2,7 @@
 #import "BrowserPreferencesStore.h"
 #import "BrowserWebView.h"
 #import "BrowserContentBlocker.h"
+#import "BrowserMotionInputController.h"
 
 static UIColor *MenuTextColor(void) {
     if (@available(tvOS 13, *)) {
@@ -1023,6 +1024,37 @@ withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator {
     }];
 }
 
+- (BrowserAdvancedMenuItem *)motionDebugOverlayMenuItem {
+    BrowserMotionInputController *motion = [BrowserMotionInputController sharedController];
+    BOOL visible = motion.debugOverlayVisible;
+    return [self advancedMenuItemWithTitle:visible ? @"Hide Motion Debug Overlay" : @"Show Motion Debug Overlay"
+                                     style:UIAlertActionStyleDefault
+                                   handler:^{
+        motion.debugOverlayVisible = !visible;
+    }];
+}
+
+- (BrowserAdvancedMenuItem *)controllerGyroPointerMenuItem {
+    BrowserMotionInputController *motion = [BrowserMotionInputController sharedController];
+    BOOL enabled = motion.controllerGyroPointerEnabled;
+    return [self advancedMenuItemWithTitle:enabled ? @"Disable Gyro Pointer (Remote/Controller)" : @"Enable Gyro Pointer (Remote/Controller)"
+                                     style:UIAlertActionStyleDefault
+                                   handler:^{
+        motion.controllerGyroPointerEnabled = !enabled;
+    }];
+}
+
+- (BrowserAdvancedMenuItem *)pointerSensitivityMenuItemIncreasing:(BOOL)increasing {
+    BrowserMotionInputController *motion = [BrowserMotionInputController sharedController];
+    NSString *title = [NSString stringWithFormat:@"%@ Pointer Sensitivity (now %.0f)",
+                       increasing ? @"Increase" : @"Decrease", motion.pointerSensitivity];
+    return [self advancedMenuItemWithTitle:title
+                                     style:UIAlertActionStyleDefault
+                                   handler:^{
+        motion.pointerSensitivity = motion.pointerSensitivity * (increasing ? 1.25 : 0.8);
+    }];
+}
+
 - (NSArray<BrowserAdvancedMenuSection *> *)advancedMenuSections {
     BrowserAdvancedMenuItem *increaseFontSizeItem = [self advancedMenuItemWithTitle:@"Increase Font Size"
                                                                                style:UIAlertActionStyleDefault
@@ -1092,6 +1124,13 @@ withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator {
         [BrowserAdvancedMenuSection sectionWithTitle:@"Compatibility"
                                                items:@[
             [self userAgentModeMenuItem],
+        ]],
+        [BrowserAdvancedMenuSection sectionWithTitle:@"Motion Pointer"
+                                               items:@[
+            [self motionDebugOverlayMenuItem],
+            [self controllerGyroPointerMenuItem],
+            [self pointerSensitivityMenuItemIncreasing:YES],
+            [self pointerSensitivityMenuItemIncreasing:NO],
         ]],
         [BrowserAdvancedMenuSection sectionWithTitle:@"Diagnostics"
                                                items:@[
