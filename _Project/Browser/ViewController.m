@@ -863,4 +863,8 @@ static UIColor *kTextColor(void) {
     [self.remoteInputController performExternalPrimaryAction];
 }
 
+- (void)motionInputControllerPerformBackAction {
+    [self.remoteInputController performExternalBackAction];
+}
+
 @end

@@ -408,6 +408,7 @@ static double BrowserNumber(NSDictionary *packet, NSString *key) {
 ///   {"type":"move","dx":12,"dy":-4}                 cursor delta in screen points
 ///   {"type":"scroll","dx":0,"dy":120}               scroll delta in points
 ///   {"type":"click"}                                primary action at the cursor
+///   {"type":"back"}                                 same as the Siri Remote's Menu / Back button
 - (void)handleDatagram:(NSData *)data fromConnection:(nw_connection_t)connection {
     id object = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
     if (![object isKindOfClass:[NSDictionary class]]) {
@@ -451,6 +452,8 @@ static double BrowserNumber(NSDictionary *packet, NSString *key) {
         [self.delegate motionInputControllerScrollByDelta:delta];
     } else if ([type isEqualToString:@"click"]) {
         [self.delegate motionInputControllerPerformPrimaryAction];
+    } else if ([type isEqualToString:@"back"]) {
+        [self.delegate motionInputControllerPerformBackAction];
     } else {
         self.badPackets += 1;
     }

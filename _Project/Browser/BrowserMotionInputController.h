@@ -13,6 +13,7 @@ extern NSString * const BrowserMotionPointerBonjourType;
 - (void)motionInputControllerMoveCursorByDelta:(CGPoint)delta;
 - (void)motionInputControllerScrollByDelta:(CGPoint)delta;
 - (void)motionInputControllerPerformPrimaryAction;
+- (void)motionInputControllerPerformBackAction;
 
 @end
 

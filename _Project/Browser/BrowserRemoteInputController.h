@@ -52,6 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)moveCursorByDelta:(CGPoint)delta;
 - (void)scrollByDelta:(CGPoint)delta;
 - (void)performExternalPrimaryAction;
+/// Behaves like the Siri Remote's Menu / Back button.
+- (void)performExternalBackAction;
 
 @end
 

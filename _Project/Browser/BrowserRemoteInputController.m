@@ -506,6 +506,24 @@ static NSString *BrowserPressPhaseString(UIPressPhase phase) {
     [self.host browserRemoteInputControllerHandlePrimaryAction];
 }
 
+- (void)performExternalBackAction {
+    // Mirrors the Menu press handling in handlePressesEnded:withEvent:.
+    if ([self.host browserRemoteInputControllerTopBarFocusActive]) {
+        [self.host browserRemoteInputControllerDeactivateTopBarFocus];
+        return;
+    }
+    if ([self.host browserRemoteInputControllerTabOverviewVisible]) {
+        [self.host browserRemoteInputControllerDismissTabOverview];
+        return;
+    }
+    UIViewController *presentedViewController = [self.host browserRemoteInputControllerPresentedViewController];
+    if (presentedViewController != nil && ![presentedViewController isKindOfClass:[UIAlertController class]]) {
+        [presentedViewController dismissViewControllerAnimated:YES completion:nil];
+        return;
+    }
+    [self.host browserRemoteInputControllerHandleMenuPress];
+}
+
 - (void)handleTouchesEnded {
     self.lastTouchLocation = CGPointMake(-1, -1);
 }
