@@ -1,0 +1,62 @@
+name: Build tvOS Browser
+
+on:
+  workflow_dispatch:        # 在 Actions 頁面手動按 "Run workflow"
+  push:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Show environment
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i appletv
+
+      - name: Build (unsigned, Release, tvOS device)
+        working-directory: _Project
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Browser.xcodeproj \
+            -target Browser \
+            -configuration Release \
+            -sdk appletvos \
+            SYMROOT="$GITHUB_WORKSPACE/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            build | tee "$GITHUB_WORKSPACE/xcodebuild.log"
+
+      - name: Package .ipa
+        run: |
+          APP="build/Release-appletvos/Browser.app"
+          test -d "$APP" || { echo "Browser.app not found"; find build -name "*.app"; exit 1; }
+          mkdir -p dist/Payload
+          cp -R "$APP" dist/Payload/
+          cd dist
+          zip -qry tvOSBrowser-unsigned.ipa Payload
+          ls -lh tvOSBrowser-unsigned.ipa
+
+      - name: Upload .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: tvOSBrowser-unsigned-ipa
+          path: dist/tvOSBrowser-unsigned.ipa
+
+      - name: Upload build log (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: xcodebuild.log
