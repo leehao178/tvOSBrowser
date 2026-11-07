@@ -519,6 +519,24 @@ static NSString *YesNo(BOOL value) {
             [report appendFormat:@"  samples:%lu  %.0f Hz  last:%@\n", (unsigned long)stats.sampleCount, [stats currentHzAt:now], lastSample];
             [report appendFormat:@"  rot  x%+6.2f y%+6.2f z%+6.2f rad/s\n", r.x, r.y, r.z];
             [report appendFormat:@"  grav x%+6.2f y%+6.2f z%+6.2f   acc x%+5.2f y%+5.2f z%+5.2f\n", g.x, g.y, g.z, a.x, a.y, a.z];
+
+            // Read the current values straight from GCMotion, independent of valueChangedHandler.
+            GCMotion *motion = controller.motion;
+            if (motion != nil) {
+                GCAcceleration pg = motion.gravity;
+                [report appendFormat:@"  poll grav x%+6.2f y%+6.2f z%+6.2f", pg.x, pg.y, pg.z];
+                if (motion.hasRotationRate) {
+                    GCRotationRate pr = motion.rotationRate;
+                    [report appendFormat:@"  rot x%+6.2f y%+6.2f z%+6.2f", pr.x, pr.y, pr.z];
+                }
+                if (motion.hasAttitude) {
+                    GCQuaternion q = motion.attitude;
+                    [report appendFormat:@"  att w%+5.2f x%+5.2f y%+5.2f z%+5.2f", q.w, q.x, q.y, q.z];
+                }
+                [report appendString:@"\n"];
+            } else {
+                [report appendString:@"  poll: controller.motion is nil now\n"];
+            }
         }
     }
 
