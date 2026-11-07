@@ -9,6 +9,10 @@ import Network
 ///   {"type":"motion","dyaw":0.01,"dpitch":-0.002}   radians turned since the previous packet
 ///   {"type":"scroll","dx":0,"dy":120}               scroll delta in points
 ///   {"type":"click"}                                primary action at the cursor
+///   {"type":"back"}                                 same as the Siri Remote's Menu / Back button
+///
+/// The last Apple TV the user picked (a Bonjour name or a typed IP) is remembered and
+/// reconnected to automatically on launch and when the app returns to the foreground.
 final class PointerClient: ObservableObject {
     static let serviceType = "_tvbpointer._udp"
     static let defaultPort: UInt16 = 47800
@@ -27,17 +31,46 @@ final class PointerClient: ObservableObject {
 
     var isConnected: Bool { connectedName != nil }
 
+    private enum Keys {
+        static let deviceName = "lastDeviceName"
+        static let host = "lastHost"
+    }
+
+    private let defaults = UserDefaults.standard
     private let queue = DispatchQueue(label: "remote.pointer.network")
     private var browser: NWBrowser?
+    private var currentEndpoint: NWEndpoint?
+    private var started = false
     // Only touched on `queue`.
     private var connection: NWConnection?
     private var welcomed = false
     private var sentCount = 0
     private var lastPublishedCount = 0
 
+    /// The IP typed last time, if the user connected by IP rather than picking a found Apple TV.
+    var savedHost: String? { defaults.string(forKey: Keys.host) }
+
+    // MARK: - Lifecycle
+
+    /// Starts Bonjour discovery and reconnects to the remembered Apple TV. Call once.
+    func start() {
+        guard !started else { return }
+        started = true
+        startBrowsing()
+        if let host = savedHost {
+            connect(host: host)
+        }
+    }
+
+    /// Reopens the current connection, e.g. after the app was in the background.
+    func reconnect() {
+        guard started, let endpoint = currentEndpoint, let label = targetName else { return }
+        open(endpoint: endpoint, label: label)
+    }
+
     // MARK: - Discovery
 
-    func startBrowsing() {
+    private func startBrowsing() {
         guard browser == nil else { return }
         let browser = NWBrowser(for: .bonjour(type: Self.serviceType, domain: nil), using: NWParameters())
         browser.stateUpdateHandler = { [weak self] state in
@@ -54,8 +87,13 @@ final class PointerClient: ObservableObject {
             }.sorted { $0.name < $1.name }
             self?.publish { client in
                 client.devices = found
-                // Connect automatically when exactly one Apple TV is found and nothing is chosen yet.
-                if client.targetName == nil, found.count == 1, let device = found.first {
+                let saved = client.defaults.string(forKey: Keys.deviceName)
+                if !client.isConnected, let saved, client.targetName != saved,
+                   let device = found.first(where: { $0.name == saved }) {
+                    // The Apple TV picked last time is back: reconnect to it.
+                    client.connect(to: device)
+                } else if client.targetName == nil, found.count == 1, let device = found.first {
+                    // Nothing chosen yet and only one Apple TV around: just use it.
                     client.connect(to: device)
                 }
             }
@@ -67,16 +105,21 @@ final class PointerClient: ObservableObject {
     // MARK: - Connection
 
     func connect(to device: Device) {
+        defaults.set(device.name, forKey: Keys.deviceName)
+        defaults.removeObject(forKey: Keys.host)
         open(endpoint: device.endpoint, label: device.name)
     }
 
     func connect(host: String) {
         let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let port = NWEndpoint.Port(rawValue: Self.defaultPort) else { return }
+        defaults.set(trimmed, forKey: Keys.host)
+        defaults.removeObject(forKey: Keys.deviceName)
         open(endpoint: .hostPort(host: NWEndpoint.Host(trimmed), port: port), label: trimmed)
     }
 
     private func open(endpoint: NWEndpoint, label: String) {
+        currentEndpoint = endpoint
         targetName = label
         connectedName = nil
         status = "連線到 \(label)…"
@@ -145,6 +188,10 @@ final class PointerClient: ObservableObject {
 
     func sendClick() {
         sendPacket(["type": "click"])
+    }
+
+    func sendBack() {
+        sendPacket(["type": "back"])
     }
 
     private func sendPacket(_ packet: [String: Any]) {
