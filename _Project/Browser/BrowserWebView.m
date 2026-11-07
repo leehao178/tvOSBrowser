@@ -1,4 +1,5 @@
 #import "BrowserWebView.h"
+#import "BrowserContentBlocker.h"
 
 #import <dlfcn.h>
 #import <objc/message.h>
@@ -544,6 +545,7 @@ static void BrowserInstallYouTubeCaptureUserScript(id configuration) {
     }
 
     self.runtimeWebView = webViewObject;
+    [self attachContentBlocker];
     UIView *runtimeView = (UIView *)webViewObject;
     runtimeView.frame = self.bounds;
     runtimeView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -561,6 +563,20 @@ static void BrowserInstallYouTubeCaptureUserScript(id configuration) {
 
     [self addSubview:runtimeView];
     [self setUserAgent:userAgent];
+}
+
+- (void)attachContentBlocker {
+    SEL configurationSelector = NSSelectorFromString(@"configuration");
+    if (![self.runtimeWebView respondsToSelector:configurationSelector]) {
+        return;
+    }
+    id configuration = ((id (*)(id, SEL))objc_msgSend)(self.runtimeWebView, configurationSelector);
+    SEL userContentControllerSelector = NSSelectorFromString(@"userContentController");
+    if (configuration == nil || ![configuration respondsToSelector:userContentControllerSelector]) {
+        return;
+    }
+    id userContentController = ((id (*)(id, SEL))objc_msgSend)(configuration, userContentControllerSelector);
+    [[BrowserContentBlocker sharedBlocker] attachToUserContentController:userContentController];
 }
 
 - (void)layoutSubviews {

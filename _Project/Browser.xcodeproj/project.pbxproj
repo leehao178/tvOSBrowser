@@ -22,6 +22,7 @@
 		A1B49A482D67F2B3001D58A1 /* BrowserTabViewModel.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B49A472D67F2B3001D58A1 /* BrowserTabViewModel.m */; };
 		A1B49A4B2D67F2C3001D58A1 /* BrowserViewModel.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B49A4A2D67F2C3001D58A1 /* BrowserViewModel.m */; };
 		A1B49A4E2D680900001D58A1 /* BrowserNavigationService.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B49A4D2D680900001D58A1 /* BrowserNavigationService.m */; };
+		C0FFEE012E00000000AD0003 /* BrowserContentBlocker.m in Sources */ = {isa = PBXBuildFile; fileRef = C0FFEE012E00000000AD0002 /* BrowserContentBlocker.m */; };
 		A1B49A552D68143D001D58A1 /* BrowserMenuCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B49A542D68143D001D58A1 /* BrowserMenuCoordinator.m */; };
 		A1B49A582D6828D4001D58A1 /* BrowserSessionStore.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B49A572D6828D4001D58A1 /* BrowserSessionStore.m */; };
 		A1B49A5B2D684000001D58A1 /* BrowserTopBarView.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B49A5A2D684000001D58A1 /* BrowserTopBarView.m */; };
@@ -67,6 +68,8 @@
 		A1B49A4A2D67F2C3001D58A1 /* BrowserViewModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BrowserViewModel.m; sourceTree = "<group>"; };
 		A1B49A4C2D680900001D58A1 /* BrowserNavigationService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BrowserNavigationService.h; sourceTree = "<group>"; };
 		A1B49A4D2D680900001D58A1 /* BrowserNavigationService.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BrowserNavigationService.m; sourceTree = "<group>"; };
+		C0FFEE012E00000000AD0001 /* BrowserContentBlocker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BrowserContentBlocker.h; sourceTree = "<group>"; };
+		C0FFEE012E00000000AD0002 /* BrowserContentBlocker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BrowserContentBlocker.m; sourceTree = "<group>"; };
 		A1B49A532D68143D001D58A1 /* BrowserMenuCoordinator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BrowserMenuCoordinator.h; sourceTree = "<group>"; };
 		A1B49A542D68143D001D58A1 /* BrowserMenuCoordinator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BrowserMenuCoordinator.m; sourceTree = "<group>"; };
 		A1B49A562D6828D4001D58A1 /* BrowserSessionStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BrowserSessionStore.h; sourceTree = "<group>"; };
@@ -201,6 +204,8 @@
 		A1B49A7C2D6D0000001D58A1 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				C0FFEE012E00000000AD0001 /* BrowserContentBlocker.h */,
+				C0FFEE012E00000000AD0002 /* BrowserContentBlocker.m */,
 				A1B49A822D6D2000001D58A1 /* BrowserDOMInteractionService.h */,
 				A1B49A832D6D2000001D58A1 /* BrowserDOMInteractionService.m */,
 				A1B49A4C2D680900001D58A1 /* BrowserNavigationService.h */,
@@ -411,6 +416,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1B49A482D67F2B3001D58A1 /* BrowserTabViewModel.m in Sources */,
+				C0FFEE012E00000000AD0003 /* BrowserContentBlocker.m in Sources */,
 				A1B49A552D68143D001D58A1 /* BrowserMenuCoordinator.m in Sources */,
 				A1B49A922D700030001D58A1 /* BrowserPageActionCoordinator.m in Sources */,
 				A1B49A952D700040001D58A1 /* BrowserRemoteInputController.m in Sources */,

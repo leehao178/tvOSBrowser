@@ -1,6 +1,7 @@
 #import "BrowserMenuCoordinator.h"
 #import "BrowserPreferencesStore.h"
 #import "BrowserWebView.h"
+#import "BrowserContentBlocker.h"
 
 static UIColor *MenuTextColor(void) {
     if (@available(tvOS 13, *)) {
@@ -1010,6 +1011,18 @@ withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator {
     }];
 }
 
+- (BrowserAdvancedMenuItem *)adBlockToggleMenuItem {
+    BrowserContentBlocker *blocker = [BrowserContentBlocker sharedBlocker];
+    BOOL enabled = blocker.enabled;
+    NSString *title = enabled ? @"Disable Ad Blocking" : @"Enable Ad Blocking";
+    return [self advancedMenuItemWithTitle:title
+                                     style:UIAlertActionStyleDefault
+                                   handler:^{
+        blocker.enabled = !enabled;
+        [[self.host browserWebView] reload];
+    }];
+}
+
 - (NSArray<BrowserAdvancedMenuSection *> *)advancedMenuSections {
     BrowserAdvancedMenuItem *increaseFontSizeItem = [self advancedMenuItemWithTitle:@"Increase Font Size"
                                                                                style:UIAlertActionStyleDefault
@@ -1071,6 +1084,10 @@ withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator {
         [BrowserAdvancedMenuSection sectionWithTitle:@"Video Playback"
                                                items:@[
             [self fullscreenVideoPlaybackToggleMenuItem],
+        ]],
+        [BrowserAdvancedMenuSection sectionWithTitle:@"Privacy"
+                                               items:@[
+            [self adBlockToggleMenuItem],
         ]],
         [BrowserAdvancedMenuSection sectionWithTitle:@"Compatibility"
                                                items:@[
