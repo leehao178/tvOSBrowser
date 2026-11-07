@@ -489,6 +489,10 @@ static NSString *YesNo(BOOL value) {
     CFTimeInterval now = CACurrentMediaTime();
     NSMutableString *report = [NSMutableString string];
 
+    static NSUInteger refreshCount = 0;
+    refreshCount += 1;
+    [report appendFormat:@"refresh #%lu  t=%.1fs\n", (unsigned long)refreshCount, now];
+
     NSArray<GCController *> *controllers = [GCController controllers];
     [report appendFormat:@"GAME CONTROLLERS (%lu)   gyro pointer: %@   sensitivity: %.0f px/rad\n",
      (unsigned long)controllers.count, self.controllerGyroPointerEnabled ? @"ON" : @"off", self.pointerSensitivity];
@@ -509,7 +513,10 @@ static NSString *YesNo(BOOL value) {
             GCRotationRate r = stats.rotationRate;
             GCAcceleration g = stats.gravity;
             GCAcceleration a = stats.userAcceleration;
-            [report appendFormat:@"  samples:%lu  %.0f Hz\n", (unsigned long)stats.sampleCount, [stats currentHzAt:now]];
+            NSString *lastSample = stats.lastSampleTime > 0
+                ? [NSString stringWithFormat:@"%.1fs ago", now - stats.lastSampleTime]
+                : @"never";
+            [report appendFormat:@"  samples:%lu  %.0f Hz  last:%@\n", (unsigned long)stats.sampleCount, [stats currentHzAt:now], lastSample];
             [report appendFormat:@"  rot  x%+6.2f y%+6.2f z%+6.2f rad/s\n", r.x, r.y, r.z];
             [report appendFormat:@"  grav x%+6.2f y%+6.2f z%+6.2f   acc x%+5.2f y%+5.2f z%+5.2f\n", g.x, g.y, g.z, a.x, a.y, a.z];
         }
@@ -556,11 +563,13 @@ static NSString *YesNo(BOOL value) {
     [self.overlayTimer invalidate];
     self.overlayTimer = nil;
     if (visible) {
-        self.overlayTimer = [NSTimer scheduledTimerWithTimeInterval:0.25
-                                                             target:self
-                                                           selector:@selector(refreshOverlay)
-                                                           userInfo:nil
-                                                            repeats:YES];
+        // Common modes, so the overlay keeps refreshing while UIKit is in a tracking run loop mode.
+        self.overlayTimer = [NSTimer timerWithTimeInterval:0.25
+                                                    target:self
+                                                  selector:@selector(refreshOverlay)
+                                                  userInfo:nil
+                                                   repeats:YES];
+        [[NSRunLoop mainRunLoop] addTimer:self.overlayTimer forMode:NSRunLoopCommonModes];
         [self refreshOverlay];
     }
 }
