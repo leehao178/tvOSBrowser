@@ -4,6 +4,9 @@ on:
   workflow_dispatch:        # 在 Actions 頁面手動按 "Run workflow"
   push:
     branches: [ master, main ]
+    paths-ignore:           # 只改 iPhone 遙控器時不用重編 tvOS App
+      - 'remote/**'
+      - '.github/workflows/remote.yml'
 
 jobs:
   build:

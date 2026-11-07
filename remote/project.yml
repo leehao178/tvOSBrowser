@@ -1,0 +1,34 @@
+# XcodeGen spec for the iPhone motion remote.
+# Generate the Xcode project with:  cd remote && xcodegen generate
+name: Remote
+options:
+  bundleIdPrefix: com.leehao178
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+targets:
+  Remote:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+    info:
+      path: Support/Info.plist
+      properties:
+        CFBundleDisplayName: TV Pointer
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSLocalNetworkUsageDescription: 用來在區域網路上找到 Apple TV 並傳送游標動作。
+        NSBonjourServices:
+          - _tvbpointer._udp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.leehao178.tvpointer
+        TARGETED_DEVICE_FAMILY: "1"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"

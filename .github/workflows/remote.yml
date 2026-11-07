@@ -1,0 +1,67 @@
+name: Build iPhone Remote
+
+on:
+  workflow_dispatch:        # 在 Actions 頁面手動按 "Run workflow"
+  push:
+    branches: [ master, main ]
+    paths:
+      - 'remote/**'
+      - '.github/workflows/remote.yml'
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: remote
+        run: xcodegen generate
+
+      - name: Build (unsigned, Release, iOS device)
+        working-directory: remote
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Remote.xcodeproj \
+            -target Remote \
+            -configuration Release \
+            -sdk iphoneos \
+            SYMROOT="$GITHUB_WORKSPACE/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            build | tee "$GITHUB_WORKSPACE/xcodebuild.log"
+
+      - name: Package .ipa
+        run: |
+          APP="build/Release-iphoneos/Remote.app"
+          test -d "$APP" || { echo "Remote.app not found"; find build -name "*.app"; exit 1; }
+          mkdir -p dist/Payload
+          cp -R "$APP" dist/Payload/
+          cd dist
+          zip -qry TVPointerRemote-unsigned.ipa Payload
+          ls -lh TVPointerRemote-unsigned.ipa
+
+      - name: Upload .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: TVPointerRemote-unsigned-ipa
+          path: dist/TVPointerRemote-unsigned.ipa
+
+      - name: Upload build log (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: remote-xcodebuild-log
+          path: xcodebuild.log
